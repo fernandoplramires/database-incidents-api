@@ -1,0 +1,228 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="incident" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    id:
+        type: string
+        description: Incident identification.
+        example: 70fbf07b2fb6111025bed3f62799b6ae
+    number?:
+        type: string
+        description: Number of incident.
+        example: INC0000007
+    opened_at:
+        type: string
+        description: Incident open timestamp.
+        example: 2015-08-12 16:08:24
+    caller_id:
+        type: string
+        description: Person wsho reported or is affected by this incident.
+        example: Joe Employee
+    category:
+        type: string
+        description: Incident category.
+        enum: [ "Database" ]
+        example: Database
+    subcategory:
+        type: string
+        enum: [ "DB2", "MS SQL Server", "Oracle" ]
+        description: Incident subcategory.
+        example: Oracle
+    state:
+        type: string
+        description: Incident current state.
+        example: On Hold
+    impact:
+        type: number
+        enum: [ 1, 2, 3 ]
+        description: Measure of the business criticality of the affected service.
+        example: 1
+    urgency:
+        type: number
+        enum: [ 1, 2, 3 ]
+        description: The extent to which resolution of an incident can bear delay.
+        example: 1
+    short_description:
+        type: string
+        description: Short description of incident.
+        example: Need access to sales DB for the West
+    description:
+        type: string
+        description: Description of incident.
+        example: I have to analyze all US data in the SFA system, but am unable to get to see the data from the west coast.]]></types:shape>
+    </types:type>
+    <types:type name="incidents" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: array
+items: 
+  type: object
+  properties:
+    id:
+        type: string
+        description: Incident identification.
+        example: 70fbf07b2fb6111025bed3f62799b6ae
+    number?:
+        type: string
+        description: Number of incident.
+        example: INC0000007
+    opened_at:
+        type: string
+        description: Incident open timestamp.
+        example: 2015-08-12 16:08:24
+    caller_id:
+        type: string
+        description: Person wsho reported or is affected by this incident.
+        example: Joe Employee
+    category:
+        type: string
+        description: Incident category.
+        enum: [ "Database" ]
+        example: Database
+    subcategory:
+        type: string
+        enum: [ "DB2", "MS SQL Server", "Oracle" ]
+        description: Incident subcategory.
+        example: Oracle
+    state:
+        type: string
+        description: Incident current state.
+        example: On Hold
+    impact:
+        type: number
+        enum: [ 1, 2, 3 ]
+        description: Measure of the business criticality of the affected service.
+        example: 1
+    urgency:
+        type: number
+        enum: [ 1, 2, 3 ]
+        description: The extent to which resolution of an incident can bear delay.
+        example: 1
+    short_description:
+        type: string
+        description: Short description of incident.
+        example: Need access to sales DB for the West
+    description:
+        type: string
+        description: Description of incident.
+        example: I have to analyze all US data in the SFA system, but am unable to get to see the data from the west coast.]]></types:shape>
+    </types:type>
+    <types:type name="incidentNumber" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="queryParameters" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#e6577840-e216-4c20-bed0-cd13a905608e">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="incident"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="incident"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#a53ea086-e5a1-4848-a0d1-a3d5a0ccfc6e">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="queryParameters"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="incidents"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#fbf70138-ed5a-497f-8a70-6b20865fe32c">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="incidentNumber"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#df805ccb-390f-4a5d-8b5e-d61c78e23e62">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="incident"/>
+          <types:attributes type="incident"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#9d89e9dc-50c9-4f6c-a3d9-a0ef47a8c1c5">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="incident"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b41869a4-9f83-49f2-9201-07a4000a8188">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="incidents"/>
+          <types:attributes type="queryParameters"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#c2163e8b-a8a2-4ff3-8ff5-f7d58eb7fd9f">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="incidentNumber"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#ddf710a4-144b-4c0c-ae85-d0a8c6ef9cb7">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="incident"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="incident"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#30efc5e5-c4b4-4a7d-9df7-fa8b64673dbb">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="incident"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#3672bce5-12c5-40a9-b04f-4d0f0482d4c4">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="incident"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

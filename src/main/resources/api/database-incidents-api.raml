@@ -1,0 +1,76 @@
+#%RAML 1.0
+title: database-incidents-api
+description: Micro API to
+version: v1.0.0
+
+mediaType: application/json
+
+types:
+  incident: !include types/incident.raml
+  incidents: !include types/incidents.raml
+
+/incidents:
+  post:
+    description: Insert new incident(s)
+    body:
+      application/json:
+        type: incident | incidents
+    responses:
+      201:
+        body:
+          application/json:
+            type: incident | incidents
+      404:
+      500:
+  get:
+    description: Get all incidents
+    queryParameters:
+      subcategory:
+        description: Incident subcategory.
+        required: false
+        example: Oracle
+      state:
+        description: Incident current state
+        required: false
+        example: On Hold
+      impact:
+        description: Measure of the business criticality of the affected service.
+        required: false
+        example: "1"
+      urgency:
+        description: The extent to which resolution of an incident can bear delay.
+        required: false
+        example: "1"
+    responses:
+      200:
+        body:
+          application/json:
+            type: incidents
+      500:
+  /{incidentIdentification}:
+    get:
+      description: Get incident referenced
+      responses:
+        200:
+          body:
+            application/json:
+              type: incident
+        404:
+        500:
+    patch:
+      description: Update incident referenced
+      body:
+        application/json:
+          type: incident
+      responses:
+        204:
+        304:
+        404:
+        422:
+        500:
+    delete:
+      description: Delete incident referenced
+      responses:
+        204:
+        404:
+        500:

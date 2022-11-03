@@ -1,0 +1,54 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+    id:
+        type: string
+        description: Incident identification.
+        example: 70fbf07b2fb6111025bed3f62799b6ae
+    number?:
+        type: string
+        description: Incident number.
+        example: INC0000007
+    opened_at?:
+        type: string
+        description: Incident open timestamp.
+        example: 2015-08-12 16:08:24
+    caller_id?:
+        type: string
+        description: Person wsho reported or is affected by this incident.
+        example: Joe Employee
+    category?:
+        type: string
+        description: Incident category.
+        enum: [ "Database" ]
+        example: Database
+    subcategory?:
+        type: string
+        enum: [ "DB2", "MS SQL Server", "Oracle" ]
+        description: Incident subcategory.
+        example: Oracle
+    state?:
+        type: string
+        description: Incident current state.
+        example: On Hold
+    impact?:
+        type: number
+        enum: [ 1, 2, 3 ]
+        description: Measure of the business criticality of the affected service.
+        example: 1
+    urgency?:
+        type: number
+        enum: [ 1, 2, 3 ]
+        description: The extent to which resolution of an incident can bear delay.
+        example: 1
+    short_description?:
+        type: string
+        description: Short description of incident.
+        example: Need access to sales DB for the West
+    description?:
+        type: string
+        description: Description of incident.
+        example: I have to analyze all US data in the SFA system, but am unable to get to see the data from the west coast.
+
+examples:
+  !include ..//examples/incident.raml
