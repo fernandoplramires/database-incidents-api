@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+		xmlns:http="http://www.mulesoft.org/schema/mule/http"
+		xmlns:servicenow="http://www.mulesoft.org/schema/mule/servicenow"
+		xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+		xmlns="http://www.mulesoft.org/schema/mule/core"
+		xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+							http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+							http://www.mulesoft.org/schema/mule/servicenow http://www.mulesoft.org/schema/mule/servicenow/current/mule-servicenow.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<global-property doc:name="Global Property" doc:id="a4d332ac-9022-4d8b-9197-621f0ee789af" name="mule.key" value="123456789abcdefg" />
+	<configuration-properties doc:name="Configuration properties" doc:id="53704894-1408-4e55-a373-d6a10c18dee9" file="properties\dev.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="14515d2a-fbfc-4e4f-9729-580aa2ec61f4" file="properties\secure-dev.yaml" key="${mule.key}" />
+	<servicenow:config name="ServiceNow_Config" doc:name="ServiceNow Config" doc:id="95a51edd-b180-457d-9823-7dcd30f7eee0" >
+		<servicenow:basic-connection username="${serviceNow.config.connection.username}" password="${serviceNow.config.connection.password}" serviceAddress="${serviceNow.config.connection.serviceAddress}" >
+			<reconnection failsDeployment="true" >
+				<reconnect />
+			</reconnection>
+			<servicenow:transport >
+				<servicenow:basic-auth-http-message-dispatcher-provider username="admin" password="aLUl@3T5+kvP" readTimeout="60" readTimeoutUnit="SECONDS"/>
+			</servicenow:transport>
+		</servicenow:basic-connection>
+	</servicenow:config>
+    <http:listener-config name="database-incidents-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="database-incidents-api-config" api="database-incidents-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+</mule>

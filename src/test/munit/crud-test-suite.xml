@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+						http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+						http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+						http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<munit:config name="crud-test-suite.xml" />
+	<munit:test name="crud-test-suite-database-create-incident-subflowTest" doc:id="ddf710a4-144b-4c0c-ae85-d0a8c6ef9cb7" description="Test">
+		<munit:behavior >
+			<set-payload value="#[MunitTools::getResourceAsString('samples/incident.json')]" doc:name="Request" doc:id="79430946-87bc-4459-8d69-f0c93737f27c" mimeType="application/json" encoding="UTF-8"/>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Create Incident" doc:id="8a2a42a1-8afc-4727-888b-e6cfd3327f7d" name="database-create-incident-subflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Incident Created" doc:id="9610e206-8a74-48aa-bb7a-72b65ee32f20" is="#[MunitTools::notNullValue()]" expression="#[payload.number]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="crud-test-suite-database-crud-read-incidents-with-query-params-subflowTest" doc:id="73c7668b-f7be-4ad1-b34d-7059f4896d8a" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Query Parameters" doc:id="b680c233-c9b9-4d58-b0e2-3cacb5dbb059" >
+				<munit:attributes value='#[ { "queryParams": [ "subcategory": "Oracle" ] } ]' />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Read Incidents with Query Parameters" doc:id="e364f7da-76e4-42b3-9941-d9c99fb1d1cb" name="database-crud-read-incidents-subflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Has Read Incidents" doc:id="3a00f815-df60-45dd-92fb-7a0807cbbde9" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="crud-test-suite-database-crud-read-incidents-by-incident-number-subflowTest" doc:id="4492e6c6-2d3c-46a3-b971-c67efc16f728" description="Test">
+		<munit:behavior>
+			<munit:set-event doc:name="URI Parameter" doc:id="aa78500a-39ee-423a-9015-112cbf897d77" >
+				<munit:attributes value='#[ { "uriParams":  { "incidentIdentification": "70fbf07b2fb6111025bed3f62799b6ae" } } ]' />
+				<munit:variables >
+					<munit:variable key="xxx" value="xxx" encoding="UTF-8" mediaType="text/plain" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Read Incidents with Query Parameters" doc:id="4c23a13b-0dce-4eda-a83e-0f501e220af0" name="database-crud-read-incidents-subflow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Has 1 Read Incident" doc:id="f448c2d5-d3c4-4243-82d9-fb5db00c1848" actual="#[sizeOf(payload)]" expected="#[1]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="crud-test-suite-database-crud-update-incident-subflowTest" doc:id="38cdadf8-f193-4b81-ab8b-cd8f34f379a5" description="Test">
+		<munit:behavior >
+			<set-payload value="#[MunitTools::getResourceAsString('samples/incident.json')]" doc:name="Request" doc:id="cd960c1d-8ef2-4eca-8de1-e308a3eaba35" mimeType="application/json" encoding="UTF-8"/>
+			<set-variable value="#[dw::Core::uuid()]" doc:name="New Description with UUID" doc:id="c31315c1-a5ca-47ec-9fac-0f30aa311f4d" variableName="newDescription"/>
+			<ee:transform doc:name="Update Request with new unique  description" doc:id="3672bce5-12c5-40a9-b04f-4d0f0482d4c4" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload update {
+	case .description -> vars.newDescription
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-variable value="#[payload.id]" doc:name="Incident Identifaction" doc:id="e836fdfc-433d-4578-b427-7ee428899e60" variableName="incidentIdentication" />
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Update Incident" doc:id="d40fe890-f29b-4535-b2fb-ef346b131d71" name="database-crud-update-incident-subflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Response with Incident Identification" doc:id="2a3ef951-692b-471a-b498-28e4ec4a19e0" actual="#[payload.body.updateResponse.sys_id]" expected="#[vars.incidentIdentication]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="crud-test-suite-database-delete-incident-subflowTest" doc:id="2c59eadb-ab3b-46bf-a6b3-b12a5f1c2c41" description="Test">
+		<munit:behavior >
+			<set-payload value="#[MunitTools::getResourceAsString('samples/incident.json')]" doc:name="Request" doc:id="0321c2f4-79d5-4308-9a06-c40bdc3a9e4d" mimeType="application/json" encoding="UTF-8"/>
+			<flow-ref doc:name="Create Incident" doc:id="ca9ff97a-6a19-4326-82b3-41509f335eb2" name="database-create-incident-subflow"/>
+			<set-variable value="#[payload.id]" doc:name="Incident Identifaction" doc:id="a06f8349-1c8a-4cd4-80e6-8135da4937ef" variableName="incidentIdentication" />
+			<munit:set-event doc:name="URI Parameter" doc:id="c03d81b3-1dc6-4d01-be5f-00348d00a02e" >
+				<munit:attributes value='#[ { "uriParams":  { "incidentIdentification": vars.incidentIdentication } } ]' />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Delete Incident" doc:id="537e2aa9-b33e-4683-aa2e-219a98da6ca3" name="database-delete-incident-subflow"/>
+			<logger level="INFO" doc:name="Response" doc:id="584c718f-db74-4d89-96da-2f60ca0e0655" message="#[payload]"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Delete Incident" doc:id="7932e41f-d7ea-4c05-be17-2705f8aaf6eb" expected='#["1"]' actual="#[payload.body.deleteRecordResponse.count]"/>
+		</munit:validation>
+	</munit:test>
+</mule>

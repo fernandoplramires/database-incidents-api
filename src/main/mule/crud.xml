@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:servicenow="http://www.mulesoft.org/schema/mule/servicenow"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+						http://www.mulesoft.org/schema/mule/servicenow http://www.mulesoft.org/schema/mule/servicenow/current/mule-servicenow.xsd
+						http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="database-create-incident-subflow" doc:id="e6577840-e216-4c20-bed0-cd13a905608e" >
+		<set-variable value="#[payload]" doc:name="Request" doc:id="c624b1e8-89f6-45d1-a35f-5d074de74f1c" variableName="payloadRequest" mimeType="application/json"/>
+		<ee:transform doc:name="JSON to SOAP" doc:id="30efc5e5-c4b4-4a7d-9df7-fa8b64673dbb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml skipNullOn="everywhere"
+ns ns0 http://www.service-now.com/incident
+---
+{
+	ns0#insert: {
+		//id: payload.id default null,
+		//number: payload.number default null,
+    	//opened_at: payload.opened_at default null,
+    	caller_id: payload.caller_id default null,
+    	category: payload.category default null,
+    	subcategory: payload.subcategory default null,
+    	//state: payload.state default null,
+    	impact: payload.impact default null,
+    	urgency: payload.urgency default null,
+    	short_description: payload.short_description default null,
+    	description: payload.description default null
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<servicenow:invoke service="incident" operation="insert" doc:name="Insert Incident" doc:id="b5521134-d86d-4608-89c5-c7e98690b50a" showReferenceValues="TRUE" config-ref="ServiceNow_Config"/>
+		<ee:transform doc:name="SOAP to JSON" doc:id="9cf1dd95-a901-452a-8c38-bd53d29e1ff0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Response" doc:id="86482dc4-5688-4514-84d4-fcd0b0d34ba0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+{
+	id: payload.body.insertResponse.sys_id,
+	number: payload.body.insertResponse.number,
+	//opened_at: null,
+	caller_id: vars.payloadRequest.caller_id,
+	category: vars.payloadRequest.category,
+	subcategory: vars.payloadRequest.subcategory,
+	state: vars.payloadRequest.state,
+	impact: vars.payloadRequest.impact,
+	urgency: vars.payloadRequest.urgency,
+	short_description: vars.payloadRequest.short_description,
+	description: vars.payloadRequest.description
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</sub-flow>
+	<sub-flow name="database-crud-read-incidents-subflow" doc:id="a53ea086-e5a1-4848-a0d1-a3d5a0ccfc6e">
+		<ee:transform doc:name="SOAP Request with Query Parameters" doc:id="b41869a4-9f83-49f2-9201-07a4000a8188" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml skipNullOn="everywhere"
+ns ns0 http://www.service-now.com/incident
+---
+{
+	ns0#getRecords: {
+		sys_id: attributes.uriParams.'incidentIdentification' default null,
+		impact: attributes.queryParams.impact default null,
+		state: attributes.queryParams.state default null,
+		subcategory: attributes.queryParams.subcategory default null,
+		urgency: attributes.queryParams.urgency default null
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<servicenow:invoke service="incident" operation="getRecords" doc:name="Get Incident(s)" doc:id="90aeb9c5-71c1-4e01-bcaa-c59f97543b7b" showReferenceValues="ALL" config-ref="ServiceNow_Config">
+		</servicenow:invoke>
+		<ee:transform doc:name="SOAP to JSON" doc:id="4125682a-d277-4cb3-a2bf-d3d32936ff70" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Response" doc:id="df65d123-a2b1-4b39-9880-152f34b4b703" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.body.getRecordsResponse mapObject( (getRecordResult, key, index) -> (
+	incident: {
+		id: getRecordResult.sys_id,
+    	number: getRecordResult.number,
+        opened_at: getRecordResult.opened_at,
+        caller_id: getRecordResult.caller_id,
+        category: getRecordResult.category,
+        subcategory: getRecordResult.subcategory,
+        state: getRecordResult.state,
+        impact: getRecordResult.impact,
+        urgency: getRecordResult.urgency,
+        short_description: getRecordResult.short_description,
+        description: getRecordResult.description
+    }
+) ) pluck $]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</sub-flow>
+	<sub-flow name="database-crud-update-incident-subflow" doc:id="9d89e9dc-50c9-4f6c-a3d9-a0ef47a8c1c5" >
+		<ee:transform doc:name="JSON to SOAP" doc:id="df805ccb-390f-4a5d-8b5e-d61c78e23e62" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml skipNullOn="everywhere"
+ns ns0 http://www.service-now.com/incident
+---
+{
+	ns0#update: {
+		sys_id: payload.id default null,
+		//number: payload.number default null,
+    	caller_id: payload.caller_id default null,
+    	category: payload.category default null,
+    	subcategory: payload.subcategory default null,
+    	state: payload.state default null,
+    	impact: payload.impact default null,
+    	urgency: payload.urgency default null,
+    	short_description: payload.short_description default null,
+    	description: payload.description default null
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<servicenow:invoke service="incident" operation="update" doc:name="Update Incident" doc:id="45747d61-f411-40e5-837f-7fc598351a0b" config-ref="ServiceNow_Config" showReferenceValues="FALSE"/>
+		<ee:transform doc:name="SOAP to JSON" doc:id="b8526245-2089-4f64-b40e-805e3b6070c5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="database-delete-incident-subflow" doc:id="c2163e8b-a8a2-4ff3-8ff5-f7d58eb7fd9f" >
+		<ee:transform doc:name="SOAP Request with Uri Parameters" doc:id="fbf70138-ed5a-497f-8a70-6b20865fe32c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.service-now.com/incident
+---
+{
+	ns0#deleteRecord: {
+		sys_id: attributes.uriParams.'incidentIdentification' default null
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<servicenow:invoke service="incident" operation="deleteRecord" doc:name="Delete Incident" doc:id="ec7b1dbc-4787-47e1-a2d2-17b24d705823" config-ref="ServiceNow_Config" showReferenceValues="FALSE"/>
+		<ee:transform doc:name="SOAP to JSON" doc:id="9d1a694b-52dd-4f23-84b7-cc0d29fde175" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+
+</mule>

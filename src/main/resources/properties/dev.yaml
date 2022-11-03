@@ -1,0 +1,6 @@
+serviceNow:
+  config:
+    connection:
+      serviceAddress: "https://dev89896.service-now.com"
+      username: "${secure::serviceNow.config.connection.username}"
+      password: "${secure::serviceNow.config.connection.password}"

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="database-incidents-api-main">
+        <http:listener config-ref="database-incidents-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="database-incidents-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="(400) Bad Request">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND, API:NOT_FOUND" enableNotifications="true" logException="true">
+                <ee:transform doc:name="(404) Resource Not Found">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="(405) Method Not Allowed">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="(406) Not Acceptable">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="(415) Unsupported Media Type">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="(501) Not Implemented">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="database-incidents-api-console">
+        <http:listener config-ref="database-incidents-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="database-incidents-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Resource not found">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="delete:\incidents\(incidentIdentification):database-incidents-api-config">
+        <flow-ref doc:name="Delete Incident" doc:id="6c19cae4-0366-4bc5-ab4b-584bcf98ac85" name="database-delete-incident-subflow"/>
+		<set-variable value="#[204]" doc:name="Http Response Code (204)" doc:id="094610dd-3db9-4b05-847f-6fdc33e3079d" variableName="httpStatus" />
+		<set-payload value="#[null]" doc:name="No Content" doc:id="26e58dcd-9b00-4e4f-8d7e-c57432f400bb" mimeType="*/*" />
+    </flow>
+    <flow name="patch:\incidents\(incidentIdentification):application\json:database-incidents-api-config">
+        <ee:transform doc:name="Include Incident Identication from URI Parametes to Request" doc:id="d15a16f0-5f8c-49c8-9210-7e211979a181" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload update {
+	case .id! -> attributes.uriParams.incidentIdentification
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Update Incident" doc:id="366eacc7-4325-4906-8e59-46b831784230" name="database-crud-update-incident-subflow"/>
+		<set-variable value="#[204]" doc:name="Http Response Code (204)" doc:id="55da0be8-f233-414f-9f9e-351dc211dad6" variableName="httpStatus" />
+		<set-payload doc:name="No Content" doc:id="ebf6ef5b-eb46-4300-8ca5-89525663aae2" mimeType="*/*" value="#[null]" />
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="37e02f9e-42cb-4709-8b3c-f1542e48805c" >
+				<raise-error doc:name="Not Found Response" doc:id="3f5eaac7-8d53-44e9-8643-22c0ca32d013" type="API:NOT_FOUND" description="Incident Identifaction not found" />
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+    <flow name="get:\incidents:database-incidents-api-config">
+		<flow-ref doc:name="Read Incidents" doc:id="ab11dd0d-1d51-47ae-8ba9-59cce7195d62" name="database-crud-read-incidents-subflow" />
+    </flow>
+    <flow name="get:\incidents\(incidentIdentification):database-incidents-api-config">
+		<flow-ref doc:name="Read Incident" doc:id="c93fc16b-5bb8-4d23-a666-28a3a2277771" name="database-crud-read-incidents-subflow"/>
+		<ee:transform doc:name="Extract Incident from Array" doc:id="0ebf153d-645b-4803-a52c-91da793f0bcc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Incident Response" doc:id="a06483e2-edef-4244-ab4d-f3f609463d52">
+			<when expression="#[payload == null]">
+				<raise-error doc:name="Not Found Response" doc:id="414ede2e-f0c2-486f-a6f7-3bb13b943a6f" type="API:NOT_FOUND" description="Incident Identifaction not found" />
+			</when>
+			<otherwise>
+				<set-variable value="#[200]" doc:name="Http Response Code (200)" doc:id="34807ccc-3dbe-4512-8e71-823d64eefb6d" variableName="httpStatus" />
+			</otherwise>
+		</choice>
+    </flow>
+    <flow name="post:\incidents:application\json:database-incidents-api-config">
+		<flow-ref doc:name="Create Incident" doc:id="b460efbe-5ea9-4648-8cbc-5d0ad29dc50f" name="database-create-incident-subflow"/>
+		<set-variable value="#[201]" doc:name="Http Response Code (201)" doc:id="7c0bbbe5-cdd0-44d3-9209-933c164ff7ed" variableName="httpStatus"/>
+    </flow>
+</mule>
