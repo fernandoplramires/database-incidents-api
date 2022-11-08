@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="scheduler-every-first-day-on-the-month-for-every-three-months-flow" doc:id="a4fa4d05-1663-4f04-a6e5-dbc57e71c23f" >
+		<scheduler doc:name="Every first day of month for every three months" doc:id="9b927361-58fe-460c-bc88-2563bc506e48" >
+			<scheduling-strategy >
+				<cron expression="0 0 0 1 1/3 ? *" timeZone="UTC"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="(INFO) Creating tablespace check routine incident" doc:id="edd4fdb9-541b-4074-8917-dd1512b41ead" message="[TRIGGER] Creating tablespace check routine incident ..."/>
+		<ee:transform doc:name="Tablespace Check Routine" doc:id="602516e9-a856-4469-8126-c08b8df0b209" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "caller_id": "Fernando Ramires",
+    "category": "Database",
+    "subcategory": "Oracle",
+    "state": "On Hold",
+    "impact": 3,
+    "urgency": 3,
+    "short_description": "[TEAM] Tablespace check routine",
+    "description": "Forward to check tablespace, please response when done."
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Create Incident" doc:id="f594bc15-2fc5-4b83-a1a3-8ee067066cee" name="database-create-incident-subflow"/>
+		<logger level="INFO" doc:name="(INFO) Created check tablespace routine" doc:id="a585e777-b214-44c9-9d6b-16ffd0cae7d0" message="[TRIGGER] Created check tablespace routine."/>
+	</flow>
+</mule>
